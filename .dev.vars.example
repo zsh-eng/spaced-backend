@@ -1,0 +1,2 @@
+COOKIE_SECRET=your_secret_key_here # Create a cookie secret key for session management
+RESEND_API_KEY=your_resend_api_key_here # Get from the Resend site
