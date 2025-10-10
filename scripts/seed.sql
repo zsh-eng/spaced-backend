@@ -4,10 +4,10 @@ VALUES
 	(
 		'test-1',
 		'test@email.com',
-		'Xj+SO0CHAnpDOZyhr2+KAmz1n60hDmogm+9UkmLi4p0K78+RyxWVbqT0u/TsIOBP'
+		'/yIDixvJ2kgR6fyzRBOncIYJ/76WGTLWQzJWTO7giTdZLJb/1tjbiI/C7jbtnAVj'
 	),
 	(
 		'test-2',
 		'test2@email.com',
-		'Xj+SO0CHAnpDOZyhr2+KAmz1n60hDmogm+9UkmLi4p0K78+RyxWVbqT0u/TsIOBP'
+		'/yIDixvJ2kgR6fyzRBOncIYJ/76WGTLWQzJWTO7giTdZLJb/1tjbiI/C7jbtnAVj'
 	) ON CONFLICT DO NOTHING;

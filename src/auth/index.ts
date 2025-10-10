@@ -27,7 +27,7 @@ export async function hashPassword(password: string, providedSalt?: Uint8Array):
 		encoder.encode(password),
 		'PBKDF2',
 		false,
-		['deriveBits']
+		['deriveBits'],
 	);
 
 	const hash = await crypto.subtle.deriveBits(
@@ -39,7 +39,7 @@ export async function hashPassword(password: string, providedSalt?: Uint8Array):
 			hash: 'SHA-256',
 		},
 		keyMaterial,
-		256 // 32 bytes
+		256, // 32 bytes
 	);
 
 	const combined = new Uint8Array(salt.length + hash.byteLength);
@@ -52,14 +52,14 @@ export async function hashPassword(password: string, providedSalt?: Uint8Array):
 
 export async function verifyPassword(
 	storedHash: string,
-	passwordAttempt: string
+	passwordAttempt: string,
 ): Promise<boolean> {
 	try {
 		// Decode from base64
 		const combined = new Uint8Array(
 			atob(storedHash)
 				.split('')
-				.map((c) => c.charCodeAt(0))
+				.map((c) => c.charCodeAt(0)),
 		);
 
 		// Split into salt and hash
@@ -70,7 +70,7 @@ export async function verifyPassword(
 		const attemptCombined = new Uint8Array(
 			atob(attemptHashWithSalt)
 				.split('')
-				.map((c) => c.charCodeAt(0))
+				.map((c) => c.charCodeAt(0)),
 		);
 		const attemptHash = attemptCombined.slice(16);
 
@@ -101,7 +101,7 @@ type CreateTempUserResult =
 export async function createTempUser(
 	db: DB,
 	email: string,
-	password: string
+	password: string,
 ): Promise<CreateTempUserResult> {
 	const existingUser = await db.query.users.findFirst({
 		where: eq(schema.users.email, email),
@@ -115,6 +115,7 @@ export async function createTempUser(
 	}
 
 	const passwordHash = await hashPassword(password);
+	console.log('IN DEV, hash is:', passwordHash);
 	const token = await generateToken();
 
 	const [tempUser] = await db
@@ -238,7 +239,7 @@ const INVALIDATE_SESSION_NOT_FOUND_ERROR_MSG = 'Session not found';
 
 export async function invalidateSession(
 	db: DB,
-	sessionId: string
+	sessionId: string,
 ): Promise<InvalidateSessionResult> {
 	const results = await db
 		.update(schema.sessions)
