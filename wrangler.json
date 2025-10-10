@@ -11,7 +11,7 @@
 			"binding": "D1",
 			"database_name": "spaced-backend",
 			"database_id": "611d4308-28af-437f-b5e8-ad12c77c209a",
-			"migrations_dir": "drizzle/migrations"
+			"migrations_dir": "drizzle/"
 		}
 	],
 	"r2_buckets": [
