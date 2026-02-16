@@ -4,6 +4,7 @@ import {
 	CardBookmarkedOperation,
 	CardContentOperation,
 	CardDeletedOperation,
+	CardMetadataOperation,
 	CardOperation,
 	CardSuspendedOperation,
 	DeckOperation,
@@ -305,6 +306,43 @@ async function getCardSuspendedFromSeqNo(
 	}));
 }
 
+async function getCardMetadataFromSeqNo(
+	db: DB,
+	userId: string,
+	requestingClientId: string,
+	seqNo: number
+): Promise<ServerToClient<CardMetadataOperation>[]> {
+	const cardMetadata = await db
+		.select({
+			seqNo: schema.cardMetadata.seqNo,
+			lastModified: schema.cardMetadata.lastModified,
+			cardId: schema.cardMetadata.cardId,
+			noteId: schema.cardMetadata.noteId,
+			siblingTag: schema.cardMetadata.siblingTag,
+		})
+		.from(schema.users)
+		.where(eq(schema.users.id, userId))
+		.innerJoin(
+			schema.cardMetadata,
+			and(
+				eq(schema.users.id, schema.cardMetadata.userId),
+				gt(schema.cardMetadata.seqNo, seqNo),
+				ne(schema.cardMetadata.lastModifiedClient, requestingClientId)
+			)
+		);
+
+	return cardMetadata.map((cardMetadata) => ({
+		type: 'cardMetadata',
+		seqNo: cardMetadata.seqNo,
+		timestamp: cardMetadata.lastModified.getTime(),
+		payload: {
+			cardId: cardMetadata.cardId,
+			noteId: cardMetadata.noteId,
+			siblingTag: cardMetadata.siblingTag,
+		},
+	}));
+}
+
 async function getDeckFromSeqNo(
 	db: DB,
 	userId: string,
@@ -403,6 +441,7 @@ export async function getAllOpsFromSeqNoExclClient(
 		getCardDeletedFromSeqNo(db, userId, requestingClientId, seqNo),
 		getCardBookmarkedFromSeqNo(db, userId, requestingClientId, seqNo),
 		getCardSuspendedFromSeqNo(db, userId, requestingClientId, seqNo),
+		getCardMetadataFromSeqNo(db, userId, requestingClientId, seqNo),
 		getDeckFromSeqNo(db, userId, requestingClientId, seqNo),
 		getDeckCardFromSeqNo(db, userId, requestingClientId, seqNo),
 	]);

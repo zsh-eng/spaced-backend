@@ -4,6 +4,7 @@ import {
 	CardBookmarkedOperation,
 	CardContentOperation,
 	CardDeletedOperation,
+	CardMetadataOperation,
 	CardOperation,
 	CardSuspendedOperation,
 	DeckOperation,
@@ -300,6 +301,39 @@ export function handleCardSuspendedOperation(
 		});
 }
 
+export function handleCardMetadataOperation(
+	op: ClientToServer<CardMetadataOperation>,
+	db: DB,
+	seqNo: number
+) {
+	return db
+		.insert(schema.cardMetadata)
+		.values({
+			userId: op.userId,
+			cardId: op.payload.cardId,
+			noteId: op.payload.noteId,
+			siblingTag: op.payload.siblingTag,
+			lastModified: new Date(op.timestamp),
+			lastModifiedClient: op.clientId,
+			seqNo,
+		})
+		.onConflictDoUpdate({
+			target: [schema.cardMetadata.userId, schema.cardMetadata.cardId],
+			set: {
+				noteId: op.payload.noteId,
+				siblingTag: op.payload.siblingTag,
+				lastModified: new Date(op.timestamp),
+				lastModifiedClient: op.clientId,
+				seqNo,
+			},
+			setWhere: sql`
+		excluded.last_modified > ${schema.cardMetadata.lastModified}
+		OR (excluded.last_modified = ${schema.cardMetadata.lastModified}
+			AND excluded.last_modified_client > ${schema.cardMetadata.lastModifiedClient})
+		`,
+		});
+}
+
 export function handleDeckOperation(op: ClientToServer<DeckOperation>, db: DB, seqNo: number) {
 	return db
 		.insert(schema.decks)
@@ -381,6 +415,8 @@ export function operationToBatchItem(
 			return handleCardBookmarkedOperation(op, db, seqNo);
 		case 'cardSuspended':
 			return handleCardSuspendedOperation(op, db, seqNo);
+		case 'cardMetadata':
+			return handleCardMetadataOperation(op, db, seqNo);
 		case 'deck':
 			return handleDeckOperation(op, db, seqNo);
 		case 'updateDeckCard':

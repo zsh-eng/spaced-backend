@@ -133,6 +133,26 @@ export const cardSuspendedOperationSchema = z.object({
 	timestamp: z.number(),
 }) satisfies z.ZodType<CardSuspendedOperation>;
 
+export type CardMetadataOperation = {
+	type: 'cardMetadata';
+	payload: StripMetadata<schema.CardMetadata>;
+	timestamp: number;
+};
+
+export const cardMetadataOperationSchema = z
+	.object({
+		type: z.literal('cardMetadata'),
+		payload: z
+			.object({
+				cardId: z.string(),
+				noteId: z.string(),
+				siblingTag: z.string(),
+			})
+			.passthrough(),
+		timestamp: z.number(),
+	})
+	.passthrough() satisfies z.ZodType<CardMetadataOperation>;
+
 export type DeckOperation = {
 	type: 'deck';
 	payload: StripMetadata<schema.Deck>;
@@ -174,6 +194,7 @@ export type Operation =
 	| CardDeletedOperation
 	| CardBookmarkedOperation
 	| CardSuspendedOperation
+	| CardMetadataOperation
 	| DeckOperation
 	| UpdateDeckCardOperation;
 
@@ -185,6 +206,7 @@ export const operationSchema = z.union([
 	cardDeletedOperationSchema,
 	cardBookmarkedOperationSchema,
 	cardSuspendedOperationSchema,
+	cardMetadataOperationSchema,
 	deckOperationSchema,
 	updateDeckCardOperationSchema,
 ]);

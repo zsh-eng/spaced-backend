@@ -380,6 +380,39 @@ export const cardSuspended = sqliteTable(
 
 export type CardSuspended = typeof cardSuspended.$inferSelect;
 
+export const cardMetadata = sqliteTable(
+	'card_metadata',
+	{
+		userId: text('user_id').notNull(),
+		cardId: text('card_id').notNull(),
+		noteId: text('note_id').notNull(),
+		siblingTag: text('sibling_tag').notNull(),
+		lastModified: integer('last_modified', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(unixepoch() * 1000)`),
+		seqNo: integer('seq_no').notNull(),
+		lastModifiedClient: text('last_modified_client')
+			.notNull()
+			.references(() => clients.id),
+	},
+	(table) => [
+		primaryKey({
+			columns: [table.userId, table.cardId],
+		}),
+		foreignKey({
+			columns: [table.userId, table.cardId],
+			foreignColumns: [cards.userId, cards.id],
+		}),
+		index('card_metadata_user_id_seq_no_modified_client_idx').on(
+			table.userId,
+			table.seqNo,
+			table.lastModifiedClient
+		),
+	]
+);
+
+export type CardMetadata = typeof cardMetadata.$inferSelect;
+
 export const decks = sqliteTable(
 	'decks',
 	{
@@ -519,6 +552,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
 	cardDeleted: many(cardDeleted),
 	cardBookmarked: many(cardBookmarked),
 	cardSuspended: many(cardSuspended),
+	cardMetadata: many(cardMetadata),
 	decks: many(decks),
 	cardDecks: many(cardDecks),
 	oauthAccounts: many(oauthAccounts),
@@ -556,6 +590,7 @@ export const cardsRelations = relations(cards, ({ one, many }) => ({
 	cardDeleted: one(cardDeleted),
 	cardBookmarked: one(cardBookmarked),
 	cardSuspended: one(cardSuspended),
+	cardMetadata: one(cardMetadata),
 	cardDecks: many(cardDecks),
 	reviewLogs: many(reviewLogs),
 }));
@@ -623,6 +658,17 @@ export const cardSuspendedRelations = relations(cardSuspended, ({ one }) => ({
 	}),
 	user: one(users, {
 		fields: [cardSuspended.userId],
+		references: [users.id],
+	}),
+}));
+
+export const cardMetadataRelations = relations(cardMetadata, ({ one }) => ({
+	card: one(cards, {
+		fields: [cardMetadata.userId, cardMetadata.cardId],
+		references: [cards.userId, cards.id],
+	}),
+	user: one(users, {
+		fields: [cardMetadata.userId],
 		references: [users.id],
 	}),
 }));
